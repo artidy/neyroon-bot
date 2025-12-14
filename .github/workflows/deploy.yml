@@ -52,6 +52,8 @@ jobs:
     steps:
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
@@ -114,8 +116,6 @@ jobs:
             echo "📄 Creating docker-compose.prod.yml if not exists..."
             if [ ! -f docker-compose.prod.yml ]; then
               cat > docker-compose.prod.yml << 'COMPOSE_EOF'
-            version: '3.8'
-
             services:
               postgres:
                 image: postgres:14-alpine
