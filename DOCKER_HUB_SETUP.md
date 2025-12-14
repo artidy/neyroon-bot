@@ -30,7 +30,7 @@
 
 ## Шаг 3: Настройте VPS сервер (один раз)
 
-Подключитесь к вашему VPS и выполните:
+Подключитесь к вашему VPS и выполните **только эти команды**:
 
 ```bash
 # 1. Установить Docker
@@ -42,79 +42,14 @@ sudo usermod -aG docker $USER
 sudo apt-get update
 sudo apt-get install -y docker-compose-plugin
 
-# 3. Создать директорию проекта
-sudo mkdir -p /opt/neyroon-bot
-sudo chown -R $USER:$USER /opt/neyroon-bot
-
-# 4. Скопировать только docker-compose.prod.yml на сервер
-cd /opt/neyroon-bot
+# 3. Перелогиниться для применения прав docker группы
+exit
+# Войдите заново по SSH
 ```
 
-### Создайте файл docker-compose.prod.yml на сервере:
+**Всё!** 🎉
 
-```bash
-cat > docker-compose.prod.yml << 'EOF'
-version: '3.8'
-
-services:
-  postgres:
-    image: postgres:14-alpine
-    container_name: neyroon-postgres
-    restart: always
-    environment:
-      POSTGRES_USER: neyroon_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      POSTGRES_DB: neyroon_bot
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - neyroon-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U neyroon_user -d neyroon_bot"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  bot:
-    image: ${DOCKER_IMAGE:-neyroon-bot:latest}
-    container_name: neyroon-bot
-    restart: always
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://neyroon_user:${POSTGRES_PASSWORD:-changeme}@postgres:5432/neyroon_bot?schema=public
-    env_file:
-      - .env
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./uploads:/app/uploads
-    networks:
-      - neyroon-network
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-networks:
-  neyroon-network:
-    driver: bridge
-
-volumes:
-  postgres_data:
-    driver: local
-EOF
-```
-
-### Создайте папку для загрузок:
-
-```bash
-mkdir -p /opt/neyroon-bot/uploads/{drawings,videos,welcome}
-```
+Остальное (создание папок, docker-compose.prod.yml, .env) **сделает автоматически** GitHub Actions при первом деплое.
 
 ---
 
