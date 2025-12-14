@@ -3,6 +3,10 @@ dist/
 .env
 uploads/drawings/*
 !uploads/drawings/.gitkeep
+uploads/videos/*
+!uploads/videos/.gitkeep
+uploads/welcome/*
+!uploads/welcome/.gitkeep
 *.log
 .DS_Store
 .vscode/
