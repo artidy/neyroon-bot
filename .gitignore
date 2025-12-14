@@ -29,3 +29,9 @@ Thumbs.db
 Desktop.ini
 .Spotlight-V100
 .Trashes
+
+# Test files
+test-payload.json
+check-videos.ts
+*.test.ts
+*.spec.ts
