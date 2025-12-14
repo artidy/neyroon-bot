@@ -207,6 +207,9 @@ jobs:
             echo "🛑 Stopping containers..."
             docker compose -f docker-compose.prod.yml down
 
+            echo "🗑️  Removing old database volume (will be recreated with correct password)..."
+            docker volume rm neyroon-bot_postgres_data 2>/dev/null || echo "Volume doesn't exist or already removed"
+
             echo "🚀 Starting containers with new image..."
             # Export POSTGRES_PASSWORD so docker-compose can use it
             export POSTGRES_PASSWORD
