@@ -67,6 +67,14 @@ jobs:
             cd /opt/neyroon-bot
 
             echo "🔧 Creating .env file from GitHub Secrets..."
+
+            echo "🔍 Debug: Checking if BOT_TOKEN is available..."
+            if [ -z "$BOT_TOKEN" ]; then
+              echo "❌ ERROR: BOT_TOKEN is empty!"
+            else
+              echo "✅ BOT_TOKEN is set (length: ${#BOT_TOKEN})"
+            fi
+
             echo "# Auto-generated .env from GitHub Secrets" > .env
             echo "# Generated at: $(date)" >> .env
             echo "" >> .env
@@ -112,6 +120,9 @@ jobs:
             echo "DOCKER_IMAGE=$DOCKER_USERNAME/neyroon-bot:latest" >> .env
 
             echo "✅ .env file created with secrets from GitHub"
+
+            echo "🔍 Checking .env file (first 5 lines, hiding sensitive data)..."
+            head -n 5 .env | sed 's/=.*/=***HIDDEN***/g'
 
             echo "📄 Creating docker-compose.prod.yml if not exists..."
             if [ ! -f docker-compose.prod.yml ]; then
