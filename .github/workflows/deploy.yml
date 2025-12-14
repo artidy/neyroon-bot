@@ -10,6 +10,7 @@ jobs:
   deploy:
     name: Deploy to Production Server
     runs-on: ubuntu-latest
+    environment: DEPLOY_SECRET  # Добавляем environment
 
     steps:
       - name: Checkout code
