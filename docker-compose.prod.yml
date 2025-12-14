@@ -20,9 +20,7 @@ services:
       retries: 5
 
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${DOCKER_IMAGE:-neyroon-bot:latest}
     container_name: neyroon-bot
     restart: always
     depends_on:
