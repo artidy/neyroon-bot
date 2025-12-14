@@ -444,3 +444,4 @@ Proprietary
 ## Поддержка
 
 При возникновении вопросов создайте Issue в репозитории или свяжитесь с разработчиком.
+# Test deployment with environment secrets
