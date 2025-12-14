@@ -23,7 +23,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          envs: BOT_TOKEN,POSTGRES_PASSWORD,ADMIN_SECRET,JWT_SECRET,KASPI_MERCHANT_ID,KASPI_MERCHANT_SECRET,PRODAMUS_API_KEY,PRODAMUS_SECRET_KEY,PRODAMUS_PROJECT_ID,SUBSCRIPTION_PRICE,SUBSCRIPTION_CURRENCY
+          envs: BOT_TOKEN,POSTGRES_PASSWORD,ADMIN_SECRET,JWT_SECRET,KASPI_MERCHANT_ID,KASPI_MERCHANT_SECRET,YUKASSA_SECRET_KEY,YUKASSA_SHOP_ID,SUBSCRIPTION_PRICE,SUBSCRIPTION_CURRENCY
           script: |
             cd /opt/neyroon-bot
 
@@ -45,9 +45,8 @@ jobs:
             echo "# Payment Systems" >> .env
             echo "KASPI_MERCHANT_ID=$KASPI_MERCHANT_ID" >> .env
             echo "KASPI_MERCHANT_SECRET=$KASPI_MERCHANT_SECRET" >> .env
-            echo "PRODAMUS_API_KEY=$PRODAMUS_API_KEY" >> .env
-            echo "PRODAMUS_SECRET_KEY=$PRODAMUS_SECRET_KEY" >> .env
-            echo "PRODAMUS_PROJECT_ID=$PRODAMUS_PROJECT_ID" >> .env
+            echo "YUKASSA_SECRET_KEY=$YUKASSA_SECRET_KEY" >> .env
+            echo "YUKASSA_SHOP_ID=$YUKASSA_SHOP_ID" >> .env
             echo "" >> .env
             echo "# Bot Settings" >> .env
             echo "WEBHOOK_URL=https://example.com" >> .env
