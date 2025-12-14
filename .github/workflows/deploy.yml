@@ -53,6 +53,16 @@ jobs:
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.0.0
         env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          KASPI_MERCHANT_ID: ${{ secrets.KASPI_MERCHANT_ID }}
+          KASPI_MERCHANT_SECRET: ${{ secrets.KASPI_MERCHANT_SECRET }}
+          YUKASSA_SECRET_KEY: ${{ secrets.YUKASSA_SECRET_KEY }}
+          YUKASSA_SHOP_ID: ${{ secrets.YUKASSA_SHOP_ID }}
+          SUBSCRIPTION_PRICE: ${{ secrets.SUBSCRIPTION_PRICE }}
+          SUBSCRIPTION_CURRENCY: ${{ secrets.SUBSCRIPTION_CURRENCY }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         with:
           host: ${{ secrets.VPS_HOST }}
