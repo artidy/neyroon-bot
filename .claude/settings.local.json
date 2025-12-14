@@ -39,7 +39,11 @@
       "Bash(git init:*)",
       "Bash(git branch:*)",
       "Bash(git add:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote remove:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
