@@ -23,11 +23,57 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
+          envs: BOT_TOKEN,POSTGRES_PASSWORD,ADMIN_SECRET,JWT_SECRET,KASPI_MERCHANT_ID,KASPI_MERCHANT_SECRET,PRODAMUS_API_KEY,PRODAMUS_SECRET_KEY,PRODAMUS_PROJECT_ID,SUBSCRIPTION_PRICE,SUBSCRIPTION_CURRENCY
           script: |
             cd /opt/neyroon-bot
 
             echo "📥 Pulling latest changes from GitHub..."
             git pull origin main
+
+            echo "🔧 Creating .env file from GitHub Secrets..."
+            echo "# Auto-generated .env from GitHub Secrets" > .env
+            echo "# Generated at: $(date)" >> .env
+            echo "" >> .env
+            echo "# Telegram Bot" >> .env
+            echo "BOT_TOKEN=$BOT_TOKEN" >> .env
+            echo "BOT_USERNAME=neyroon_bot" >> .env
+            echo "" >> .env
+            echo "# Database" >> .env
+            echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+            echo "DATABASE_URL=postgresql://neyroon_user:$POSTGRES_PASSWORD@postgres:5432/neyroon_bot?schema=public" >> .env
+            echo "" >> .env
+            echo "# Payment Systems" >> .env
+            echo "KASPI_MERCHANT_ID=$KASPI_MERCHANT_ID" >> .env
+            echo "KASPI_MERCHANT_SECRET=$KASPI_MERCHANT_SECRET" >> .env
+            echo "PRODAMUS_API_KEY=$PRODAMUS_API_KEY" >> .env
+            echo "PRODAMUS_SECRET_KEY=$PRODAMUS_SECRET_KEY" >> .env
+            echo "PRODAMUS_PROJECT_ID=$PRODAMUS_PROJECT_ID" >> .env
+            echo "" >> .env
+            echo "# Bot Settings" >> .env
+            echo "WEBHOOK_URL=https://example.com" >> .env
+            echo "" >> .env
+            echo "# Subscription Settings" >> .env
+            echo "SUBSCRIPTION_PRICE=$SUBSCRIPTION_PRICE" >> .env
+            echo "SUBSCRIPTION_CURRENCY=$SUBSCRIPTION_CURRENCY" >> .env
+            echo "SUBSCRIPTION_DURATION_DAYS=30" >> .env
+            echo "" >> .env
+            echo "# Admin Panel" >> .env
+            echo "ADMIN_PORT=3000" >> .env
+            echo "ADMIN_SECRET=$ADMIN_SECRET" >> .env
+            echo "JWT_SECRET=$JWT_SECRET" >> .env
+            echo "" >> .env
+            echo "# File Storage" >> .env
+            echo "UPLOAD_PATH=./uploads" >> .env
+            echo "MAX_FILE_SIZE=10485760" >> .env
+            echo "" >> .env
+            echo "# Scheduler" >> .env
+            echo "TIMEZONE=Asia/Almaty" >> .env
+            echo "DEFAULT_LESSON_TIME=10:00" >> .env
+            echo "" >> .env
+            echo "# Node Environment" >> .env
+            echo "NODE_ENV=production" >> .env
+
+            echo "✅ .env file created with secrets from GitHub"
 
             echo "🛑 Stopping containers..."
             docker-compose -f docker-compose.prod.yml down
