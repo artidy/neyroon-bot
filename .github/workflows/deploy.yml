@@ -78,11 +78,17 @@ jobs:
 
             echo "🔧 Creating .env file from GitHub Secrets..."
 
-            echo "🔍 Debug: Checking if BOT_TOKEN is available..."
+            echo "🔍 Debug: Checking if secrets are available..."
             if [ -z "$BOT_TOKEN" ]; then
               echo "❌ ERROR: BOT_TOKEN is empty!"
             else
               echo "✅ BOT_TOKEN is set (length: ${#BOT_TOKEN})"
+            fi
+
+            if [ -z "$POSTGRES_PASSWORD" ]; then
+              echo "❌ ERROR: POSTGRES_PASSWORD is empty!"
+            else
+              echo "✅ POSTGRES_PASSWORD is set (length: ${#POSTGRES_PASSWORD})"
             fi
 
             echo "# Auto-generated .env from GitHub Secrets" > .env
@@ -212,6 +218,10 @@ jobs:
 
             echo "📋 Showing recent logs..."
             docker-compose -f docker-compose.prod.yml logs --tail 20 bot
+
+            echo "🔍 Debug: Checking DATABASE_URL in container..."
+            docker exec neyroon-bot sh -c 'echo "DATABASE_URL length: ${#DATABASE_URL}"'
+            docker exec neyroon-bot sh -c 'echo "BOT_TOKEN length: ${#BOT_TOKEN}"'
 
             echo "✅ Deployment completed!"
 
