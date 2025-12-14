@@ -15,3 +15,17 @@ prisma/migrations/
 .next/
 
 /src/generated/prisma
+
+# Claude Code
+.claude/
+
+# Временные файлы
+*.tmp
+*.temp
+*~
+
+# OS specific
+Thumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes
