@@ -47,7 +47,7 @@ jobs:
     name: Deploy to Production Server
     runs-on: ubuntu-latest
     needs: build
-    environment: .env
+    environment: DEPLOY_SECRET
 
     steps:
       - name: Deploy to VPS via SSH
@@ -124,8 +124,9 @@ jobs:
             echo "🔍 Checking .env file (first 5 lines, hiding sensitive data)..."
             head -n 5 .env | sed 's/=.*/=***HIDDEN***/g'
 
-            echo "📄 Creating docker-compose.prod.yml if not exists..."
-            if [ ! -f docker-compose.prod.yml ]; then
+            echo "📄 Creating docker-compose.prod.yml..."
+            # Always recreate to ensure it's up to date
+            if true; then
               cat > docker-compose.prod.yml << 'COMPOSE_EOF'
             services:
               postgres:
