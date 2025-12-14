@@ -1,0 +1,57 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main  # или master, в зависимости от вашей ветки
+      - production  # можно добавить отдельную production ветку
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd /opt/neyroon-bot
+
+            echo "📥 Pulling latest changes from GitHub..."
+            git pull origin main
+
+            echo "🛑 Stopping containers..."
+            docker-compose -f docker-compose.prod.yml down
+
+            echo "🏗️  Building new images..."
+            docker-compose -f docker-compose.prod.yml build --no-cache
+
+            echo "🚀 Starting containers..."
+            docker-compose -f docker-compose.prod.yml up -d
+
+            echo "⏳ Waiting for services to start..."
+            sleep 10
+
+            echo "🔍 Checking container status..."
+            docker-compose -f docker-compose.prod.yml ps
+
+            echo "📋 Showing recent logs..."
+            docker-compose -f docker-compose.prod.yml logs --tail 20 bot
+
+            echo "✅ Deployment completed!"
+
+            # Проверка health endpoint
+            if curl -s http://localhost:3000/health | grep -q "ok"; then
+              echo "✅ Health check passed!"
+            else
+              echo "❌ Health check failed!"
+              exit 1
+            fi

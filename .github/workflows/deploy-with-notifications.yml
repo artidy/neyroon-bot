@@ -1,0 +1,96 @@
+name: Deploy to VPS with Notifications
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  workflow_dispatch:  # Позволяет запустить вручную из GitHub UI
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Send Telegram notification - Start
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_ADMIN_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🚀 Начинаю развертывание Neyroon Bot
+
+            Коммит: ${{ github.event.head_commit.message }}
+            Автор: ${{ github.actor }}
+            Ветка: ${{ github.ref_name }}
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd /opt/neyroon-bot
+
+            echo "📥 Pulling latest changes from GitHub..."
+            git pull origin ${{ github.ref_name }}
+
+            echo "🛑 Stopping containers..."
+            docker-compose -f docker-compose.prod.yml down
+
+            echo "🏗️  Building new images..."
+            docker-compose -f docker-compose.prod.yml build --no-cache
+
+            echo "🚀 Starting containers..."
+            docker-compose -f docker-compose.prod.yml up -d
+
+            echo "⏳ Waiting for services to start..."
+            sleep 10
+
+            echo "🔍 Checking container status..."
+            docker-compose -f docker-compose.prod.yml ps
+
+            echo "📋 Showing recent logs..."
+            docker-compose -f docker-compose.prod.yml logs --tail 20 bot
+
+            # Проверка health endpoint
+            if curl -s http://localhost:3000/health | grep -q "ok"; then
+              echo "✅ Health check passed!"
+            else
+              echo "❌ Health check failed!"
+              exit 1
+            fi
+
+      - name: Send Telegram notification - Success
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_ADMIN_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ✅ Развертывание успешно завершено!
+
+            Проект: Neyroon Bot
+            Коммит: ${{ github.event.head_commit.message }}
+            Время: ${{ github.event.head_commit.timestamp }}
+
+      - name: Send Telegram notification - Failure
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_ADMIN_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ❌ Ошибка развертывания!
+
+            Проект: Neyroon Bot
+            Коммит: ${{ github.event.head_commit.message }}
+            Автор: ${{ github.actor }}
+
+            Проверьте логи: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

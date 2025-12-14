@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # PostgreSQL база данных
+  postgres:
+    image: postgres:15-alpine
+    container_name: neyroon-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: neyroon_user
+      POSTGRES_PASSWORD: neyroon_password_2024
+      POSTGRES_DB: neyroon_bot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neyroon_user -d neyroon_bot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Telegram Bot + Admin Panel
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: neyroon-bot
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Telegram Bot
+      BOT_TOKEN: ${BOT_TOKEN}
+
+      # Database
+      DATABASE_URL: postgresql://neyroon_user:neyroon_password_2024@postgres:5432/neyroon_bot?schema=public
+
+      # Payment Systems
+      YUKASSA_SHOP_ID: ${YUKASSA_SHOP_ID}
+      YUKASSA_SECRET_KEY: ${YUKASSA_SECRET_KEY}
+      KASPI_MERCHANT_ID: ${KASPI_MERCHANT_ID}
+      KASPI_MERCHANT_SECRET: ${KASPI_MERCHANT_SECRET}
+
+      # Subscription Settings
+      SUBSCRIPTION_PRICE: ${SUBSCRIPTION_PRICE:-4000}
+      SUBSCRIPTION_CURRENCY: ${SUBSCRIPTION_CURRENCY:-KZT}
+      SUBSCRIPTION_DURATION_DAYS: ${SUBSCRIPTION_DURATION_DAYS:-30}
+
+      # Admin Panel
+      ADMIN_PORT: 3000
+      ADMIN_SECRET: ${ADMIN_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+
+      # File Storage
+      UPLOAD_PATH: /app/uploads
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-10485760}
+
+      # Scheduler
+      TIMEZONE: ${TIMEZONE:-Asia/Almaty}
+      DEFAULT_LESSON_TIME: ${DEFAULT_LESSON_TIME:-10:00}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./admin-panel:/app/admin-panel
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prisma Studio (опционально, для управления БД через GUI)
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.studio
+    container_name: neyroon-prisma-studio
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://neyroon_user:neyroon_password_2024@postgres:5432/neyroon_bot?schema=public
+    ports:
+      - "5555:5555"
+    profiles:
+      - studio
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: neyroon-network

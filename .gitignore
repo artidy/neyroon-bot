@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+uploads/drawings/*
+!uploads/drawings/.gitkeep
+*.log
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*.db
+*.sqlite
+prisma/migrations/
+.next/
+
+/src/generated/prisma

@@ -1,0 +1,15 @@
+# Dockerfile для Prisma Studio
+FROM node:18-alpine
+
+RUN apk add --no-cache openssl
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY prisma ./prisma
+
+RUN npm ci --only=production
+
+EXPOSE 5555
+
+CMD ["sh", "-c", "npx prisma generate && npx prisma studio --port 5555 --browser none"]

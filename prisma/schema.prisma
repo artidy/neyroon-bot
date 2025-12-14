@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  NEW
+  TRIAL
+  ACTIVE
+  EXPIRED
+  BLOCKED
+}
+
+enum LessonType {
+  FREE
+  PREMIUM
+}
+
+model User {
+  id                String       @id @default(cuid())
+  telegramId        BigInt       @unique
+  username          String?
+  firstName         String?
+  lastName          String?
+  status            UserStatus   @default(NEW)
+  isNewbie          Boolean?
+  preferredTime     String?      @default("10:00")
+  timezone          String       @default("Asia/Almaty")
+  currentLessonDay  Int          @default(0)
+  acceptedPolicy    Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  lastActivityAt    DateTime     @default(now())
+
+  subscriptions     Subscription[]
+  drawings          Drawing[]
+  paymentRequests   PaymentRequest[]
+
+  @@index([telegramId])
+  @@index([status])
+}
+
+model Subscription {
+  id                String       @id @default(cuid())
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  price             Int
+  currency          String       @default("KZT")
+  paymentProvider   String
+  paymentId         String?
+  status            String       @default("pending")
+
+  startDate         DateTime?
+  endDate           DateTime?
+
+  deletedAt         DateTime?    // Для мягкого удаления
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model PaymentRequest {
+  id                String       @id @default(cuid())
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  paymentMethodId   String
+  price             Int
+  currency          String
+  paymentMethodName String       // Название способа оплаты (Kaspi, Tinkoff и т.д.)
+  paymentUrl        String       // Ссылка, по которой перешёл пользователь
+
+  status            String       @default("pending") // pending, confirmed, rejected, cancelled
+
+  adminNotified     Boolean      @default(false)
+  notifiedAt        DateTime?
+
+  confirmedBy       String?      // Telegram ID администратора, который подтвердил
+  confirmedAt       DateTime?
+
+  deletedAt         DateTime?    // Для мягкого удаления
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model Lesson {
+  id                String       @id @default(cuid())
+  lessonNumber      Int          @unique
+  type              LessonType
+  title             String?
+  description       String?
+
+  previewVideoUrl   String?
+  fullVideoUrl      String?
+  practiceText      String?
+
+  isActive          Boolean      @default(true)
+  order             Int
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  drawings          Drawing[]
+  videos            LessonVideo[]
+
+  @@index([lessonNumber])
+  @@index([type])
+}
+
+model LessonVideo {
+  id                String       @id @default(cuid())
+  lessonId          String
+  lesson            Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  title             String
+  videoUrl          String
+  order             Int          @default(0)
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([lessonId])
+  @@index([order])
+}
+
+model Drawing {
+  id                String       @id @default(cuid())
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lessonId          String
+  lesson            Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  fileId            String
+  filePath          String
+  fileName          String
+
+  comment           String?
+  commentedAt       DateTime?
+  commentedBy       String?
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([lessonId])
+  @@index([createdAt])
+}
+
+model Admin {
+  id                String       @id @default(cuid())
+  username          String       @unique
+  passwordHash      String
+  email             String?      @unique
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([username])
+}
+
+model BotSettings {
+  id                String       @id @default(cuid())
+  key               String       @unique
+
+  // Политика конфиденциальности (показывается первой)
+  policyText        String?      // Текст политики с возможными ссылками
+  policyButton      String @default("Я согласен")
+
+  // Приветственное сообщение
+  welcomePhoto      String?      // URL или file_id фото
+  welcomeText       String?      // Описание канала/курса
+  welcomeButtonNewbie     String @default("Новичок")
+  welcomeButtonExperienced String @default("Уже знаком")
+
+  // Блок для новичков после FREE уроков
+  newbieCtaText     String @default("👆 Посмотрели бесплатные уроки?\n\nГотовы присоединиться к полному курсу?")
+  newbieCtaButton   String @default("🚀 Хочу в проект")
+
+  // Настройки оплаты
+  paymentText       String?      // Текст сообщения об оплате
+  paymentPrice      Int?         // Цена подписки
+  paymentCurrency   String @default("KZT")
+  paymentDuration   Int @default(30) // Длительность в днях
+  adminTelegramId   String?      // Telegram ID администратора для уведомлений
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([key])
+}
+
+model PaymentMethod {
+  id                String       @id @default(cuid())
+  name              String       // Название метода (например, "ЮKassa")
+  paymentUrl        String       // Прямая ссылка на страницу оплаты (можно использовать {price} для замены)
+  buttonText        String       // Текст на кнопке
+  buttonColor       String       @default("primary") // Цвет кнопки: primary, secondary, positive, negative
+  price             Int?         // Цена для этого метода оплаты (если null, используется глобальная)
+  currency          String?      // Валюта для этого метода (если null, используется глобальная)
+  isActive          Boolean      @default(true)
+  order             Int          @default(0) // Порядок отображения
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([order])
+}

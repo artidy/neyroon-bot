@@ -1,0 +1,102 @@
+# Этот workflow:
+# 1. Собирает Docker образ
+# 2. Пушит его в Docker Hub
+# 3. На сервере скачивает новый образ и перезапускает контейнеры
+
+name: Build and Deploy via Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+      - production
+
+jobs:
+  build-and-push:
+    name: Build and Push to Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/neyroon-bot
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/neyroon-bot:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/neyroon-bot:buildcache,mode=max
+
+  deploy:
+    name: Deploy to VPS
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd /opt/neyroon-bot
+
+            echo "📥 Pulling latest Docker image..."
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/neyroon-bot:latest
+
+            echo "🛑 Stopping containers..."
+            docker-compose -f docker-compose.prod.yml down
+
+            echo "🚀 Starting containers with new image..."
+            docker-compose -f docker-compose.prod.yml up -d
+
+            echo "⏳ Waiting for services..."
+            sleep 10
+
+            echo "🔍 Checking status..."
+            docker-compose -f docker-compose.prod.yml ps
+
+            # Health check
+            if curl -s http://localhost:3000/health | grep -q "ok"; then
+              echo "✅ Deployment successful!"
+            else
+              echo "❌ Health check failed!"
+              exit 1
+            fi
+
+      - name: Send Telegram notification
+        if: always()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_ADMIN_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ${{ job.status == 'success' && '✅' || '❌' }} Deployment ${{ job.status }}
+
+            Проект: Neyroon Bot
+            Коммит: ${{ github.event.head_commit.message }}
+            Автор: ${{ github.actor }}

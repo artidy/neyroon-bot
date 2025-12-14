@@ -1,0 +1,18 @@
+# Dockerfile для разработки с hot-reload
+FROM node:18-alpine
+
+RUN apk add --no-cache openssl python3 make g++
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN mkdir -p /app/uploads/drawings
+
+EXPOSE 3000
+
+# Запуск с hot-reload через nodemon
+CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npm run dev"]

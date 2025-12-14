@@ -1,0 +1,2531 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neyroon Bot - Админ Панель</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .auth-section {
+            margin-top: 15px;
+        }
+
+        .auth-section input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            width: 300px;
+        }
+
+        .auth-section button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .auth-section button:hover {
+            background: #0056b3;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            /* Плавная прокрутка */
+            scroll-behavior: smooth;
+        }
+
+        /* Стили для прокручиваемого контента */
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .color-option {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+
+        .color-option input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .color-option input[type="radio"]:checked + .color-badge {
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
+        }
+
+        .color-badge {
+            padding: 6px 12px;
+            color: white;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .error {
+            color: #dc3545;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .success {
+            color: #155724;
+            padding: 10px;
+            background: #d4edda;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        /* Toast notification styles */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #4CAF50;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast.error {
+            background: #f44336;
+        }
+
+        .toast.warning {
+            background: #ff9800;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .toast.hiding {
+            animation: slideOut 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Neyroon Bot - Админ Панель</h1>
+            <div class="auth-section">
+                <input type="password" id="apiKey" placeholder="Введите Admin Secret Key">
+                <button onclick="authenticate()">Подключиться</button>
+                <span id="connectionStatus" class="status disconnected">Не подключено</span>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('stats')">Статистика</button>
+            <button class="tab" onclick="showTab('welcome')">⚙️ Приветствие</button>
+            <button class="tab" onclick="showTab('payment-settings')">💳 Настройки оплаты</button>
+            <button class="tab" onclick="showTab('users')">Пользователи</button>
+            <button class="tab" onclick="showTab('lessons')">Уроки</button>
+            <button class="tab" onclick="showTab('drawings')">Рисунки</button>
+            <button class="tab" onclick="showTab('payments')">История платежей</button>
+            <button class="tab" onclick="showTab('test')">🧪 Тестирование</button>
+        </div>
+
+        <div id="stats-content" class="content active">
+            <h2>Статистика</h2>
+            <div id="statsData" class="stats-grid"></div>
+        </div>
+
+        <div id="welcome-content" class="content">
+            <h2>⚙️ Настройка приветствия</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                Настройте приветственное сообщение, которое увидят новые пользователи при запуске бота.
+            </p>
+
+            <div style="background: white; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="margin-top: 0;">Текущее приветствие</h3>
+
+                <!-- Превью -->
+                <div id="welcomePreview" style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div id="welcomePreviewPhoto" style="margin-bottom: 15px; text-align: center;"></div>
+                    <div id="welcomePreviewText" style="white-space: pre-wrap; margin-bottom: 15px;"></div>
+                    <div id="welcomePreviewButtons" style="display: flex; gap: 10px; justify-content: center;"></div>
+                </div>
+
+                <!-- Форма редактирования -->
+                <h3 style="margin-bottom: 15px;">🔒 Политика конфиденциальности (опционально)</h3>
+                <p style="color: #666; margin-bottom: 20px;">Настройте текст для экрана согласия с политикой. Если оставить текст пустым, экран не будет показываться.</p>
+
+                <div class="form-group">
+                    <label>📝 Текст политики:</label>
+
+                    <!-- Панель инструментов -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px; padding: 8px; background: #f5f5f5; border-radius: 4px; flex-wrap: wrap;">
+                        <button type="button" onclick="insertPolicyFormatting('bold')" style="padding: 6px 12px; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Жирный текст">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" onclick="insertPolicyFormatting('italic')" style="padding: 6px 12px; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-style: italic;" title="Курсив">
+                            <em>I</em>
+                        </button>
+                        <button type="button" onclick="insertPolicyFormatting('code')" style="padding: 6px 12px; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-family: monospace;" title="Моноширинный текст">
+                            <code>&lt;/&gt;</code>
+                        </button>
+                        <div style="width: 1px; background: #ddd; margin: 0 4px;"></div>
+                        <button type="button" onclick="insertPolicyLink()" style="padding: 6px 12px; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" title="Вставить ссылку">
+                            🔗 Ссылка
+                        </button>
+                        <button type="button" onclick="insertPolicyNewline()" style="padding: 6px 12px; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" title="Новая строка">
+                            ↵ Перенос
+                        </button>
+                        <div style="width: 1px; background: #ddd; margin: 0 4px;"></div>
+                        <button type="button" onclick="clearPolicyText()" style="padding: 6px 12px; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; color: #d32f2f;" title="Очистить текст">
+                            🗑️ Очистить
+                        </button>
+                    </div>
+
+                    <textarea
+                        id="policyTextInput"
+                        rows="6"
+                        placeholder="Для использования бота необходимо ознакомиться с документами:&#10;&#10;[Политика конфиденциальности](https://example.com/privacy)&#10;[Пользовательское соглашение](https://example.com/terms)"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 13px; resize: vertical;"
+                    ></textarea>
+                    <small style="color: #666;">
+                        Поддерживается Markdown: <code>**жирный**</code>, <code>*курсив*</code>, <code>`код`</code>, <code>[текст](url)</code>
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label>✅ Текст кнопки согласия:</label>
+                    <input
+                        type="text"
+                        id="policyButtonInput"
+                        placeholder="Я согласен"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                    >
+                </div>
+
+                <div style="background: #e7f3ff; border: 1px solid #2196F3; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                    <h4 style="margin-top: 0; color: #2196F3;">👁️ Предпросмотр</h4>
+                    <div id="policyPreview" style="white-space: pre-wrap; font-size: 14px; color: #333; line-height: 1.6;"></div>
+                </div>
+
+                <hr style="margin: 30px 0; border: none; border-top: 2px solid #e0e0e0;">
+
+                <div class="form-group">
+                    <label>📸 Фото приветствия:</label>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                        <input type="file" id="welcomePhotoInput" accept="image/*" style="flex: 1;">
+                        <button class="btn btn-primary" onclick="uploadWelcomePhoto()">Загрузить</button>
+                        <button class="btn btn-danger" onclick="removeWelcomePhoto()">Удалить</button>
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Форматы: JPG, PNG, GIF, WebP. Максимум 5 МБ.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Текст приветствия:</label>
+                    <textarea
+                        id="welcomeTextInput"
+                        rows="8"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;"
+                        placeholder="Введите текст приветствия..."
+                    ></textarea>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Поддерживается Markdown форматирование: **жирный**, *курсив*, `код`
+                    </small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>🟢 Текст кнопки "Новичок":</label>
+                        <input
+                            type="text"
+                            id="welcomeButtonNewbieInput"
+                            placeholder="Новичок"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label>🔵 Текст кнопки "Уже знаком":</label>
+                        <input
+                            type="text"
+                            id="welcomeButtonExperiencedInput"
+                            placeholder="Уже знаком"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                        >
+                    </div>
+                </div>
+
+                <hr style="margin: 30px 0; border: none; border-top: 2px solid #e0e0e0;">
+                <h3 style="margin-bottom: 15px;">🎯 Блок призыва к действию для новичков</h3>
+                <p style="color: #666; margin-bottom: 20px;">Текст и кнопка, которые показываются после бесплатных уроков</p>
+
+                <div class="form-group">
+                    <label>📝 Текст призыва (CTA):</label>
+                    <textarea
+                        id="newbieCtaTextInput"
+                        rows="3"
+                        placeholder="👆 Посмотрели бесплатные уроки?&#10;&#10;Готовы присоединиться к полному курсу?"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; resize: vertical;"
+                    ></textarea>
+                    <small style="color: #666;">Поддерживается Markdown форматирование</small>
+                </div>
+
+                <div class="form-group">
+                    <label>🚀 Текст кнопки:</label>
+                    <input
+                        type="text"
+                        id="newbieCtaButtonInput"
+                        placeholder="🚀 Хочу в проект"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                    >
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-success" onclick="saveWelcomeSettings()">💾 Сохранить изменения</button>
+                    <button class="btn" onclick="loadWelcomeSettings()">🔄 Отменить</button>
+                </div>
+            </div>
+
+            <!-- Информация -->
+            <div style="background: #e7f3ff; border: 1px solid #2196F3; border-radius: 8px; padding: 15px;">
+                <h4 style="margin-top: 0; color: #2196F3;">💡 Подсказка</h4>
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li>Фото помогает создать визуальное представление о вашем курсе</li>
+                    <li>Используйте краткий, но информативный текст (3-5 предложений)</li>
+                    <li>Кнопки определяют первый опыт пользователя с ботом</li>
+                    <li>Изменения применяются только для новых пользователей</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="payment-settings-content" class="content">
+            <h2>💳 Настройки оплаты</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                Настройте сообщение об оплате, цену подписки и доступные способы оплаты.
+            </p>
+
+            <!-- Блок настроек текста оплаты -->
+            <div class="card">
+                <h3>Текст сообщения об оплате</h3>
+                <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                    Этот текст увидят пользователи при нажатии кнопки "Хочу в проект". Можно использовать Markdown.
+                </p>
+
+                <!-- Форматирование -->
+                <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                    <button type="button" onclick="insertPaymentFormatting('bold')"
+                            style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                        <strong>B</strong>
+                    </button>
+                    <button type="button" onclick="insertPaymentFormatting('italic')"
+                            style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer;">
+                        <em>I</em>
+                    </button>
+                    <button type="button" onclick="insertPaymentFormatting('code')"
+                            style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer; font-family: monospace;">
+                        <code>&lt;/&gt;</code>
+                    </button>
+                    <button type="button" onclick="insertPaymentLink()"
+                            style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer;">
+                        🔗 Ссылка
+                    </button>
+                    <button type="button" onclick="insertPaymentNewline()"
+                            style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer;">
+                        ↵ Перенос
+                    </button>
+                    <button type="button" onclick="clearPaymentText()"
+                            style="padding: 6px 12px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; cursor: pointer;">
+                        🗑️ Очистить
+                    </button>
+                </div>
+
+                <!-- Live Preview -->
+                <div id="paymentPreview" style="padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 10px; min-height: 60px; white-space: pre-wrap;"></div>
+
+                <!-- Кнопки быстрой вставки -->
+                <div style="margin-bottom: 10px;">
+                    <button onclick="insertAtCursor('paymentTextInput', '[цены]')"
+                            style="padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; margin-right: 8px;">
+                        💰 Вставить [цены]
+                    </button>
+                    <small style="color: #666;">Используйте [цены] для автоматического списка всех цен из методов оплаты</small>
+                </div>
+
+                <!-- Textarea -->
+                <textarea id="paymentTextInput" rows="8" oninput="updatePaymentPreview()"
+                    placeholder="Например:&#10;🎨 **Присоединяйтесь к полному курсу рисования!**&#10;&#10;✨ **Что вы получите:**&#10;• Доступ ко всем урокам&#10;• Ежедневная доставка материалов&#10;• Обратная связь от преподавателя&#10;&#10;Выберите удобный способ оплаты:"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 13px; resize: vertical;">
+                </textarea>
+
+                <h3 style="margin-top: 25px;">Параметры подписки</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Цена</label>
+                        <input type="number" id="paymentPriceInput" placeholder="5000"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Валюта</label>
+                        <select id="paymentCurrencyInput" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="KZT">KZT (Тенге)</option>
+                            <option value="RUB">RUB (Рубль)</option>
+                            <option value="USD">USD (Доллар)</option>
+                            <option value="EUR">EUR (Евро)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Длительность (дней)</label>
+                        <input type="number" id="paymentDurationInput" placeholder="30"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">Telegram ID администратора для уведомлений</h3>
+                <div style="margin-top: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Telegram ID</label>
+                    <input type="text" id="adminTelegramIdInput" placeholder="123456789"
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <small style="color: #666; display: block; margin-top: 5px;">На этот Telegram ID будут приходить уведомления о новых заявках на оплату</small>
+                </div>
+
+                <button onclick="savePaymentSettings()"
+                        style="margin-top: 20px; padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                    💾 Сохранить настройки
+                </button>
+            </div>
+
+            <!-- Блок способов оплаты -->
+            <div class="card" style="margin-top: 25px;">
+                <h3>Способы оплаты</h3>
+                <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                    Управляйте доступными методами оплаты. Пользователи увидят активные кнопки при выборе оплаты.
+                </p>
+
+                <button onclick="showAddPaymentMethodModal()"
+                        style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 15px;">
+                    + Добавить способ оплаты
+                </button>
+
+                <div id="paymentMethodsTable"></div>
+            </div>
+
+            <!-- Модальное окно для добавления/редактирования способа оплаты -->
+            <div id="paymentMethodModal" class="modal">
+                <div class="modal-content" style="max-width: 600px;">
+                    <span class="close" onclick="closePaymentMethodModal()">&times;</span>
+                    <h3 id="paymentMethodModalTitle">Добавить способ оплаты</h3>
+
+                    <input type="hidden" id="paymentMethodId">
+
+                    <div class="form-group">
+                        <label>Название способа оплаты:</label>
+                        <input type="text" id="paymentMethodName" placeholder="Например: ЮKassa">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ссылка на страницу оплаты:</label>
+                        <input type="url" id="paymentMethodUrl" placeholder="https://example.com/pay">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Текст на кнопке:</label>
+                        <input type="text" id="paymentMethodButtonText" placeholder="💳 Оплатить через ЮKassa">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Цена для этого способа оплаты (необязательно):</label>
+                        <input type="number" id="paymentMethodPrice" placeholder="Оставьте пустым, чтобы использовать общую цену">
+                        <small style="color: #666; display: block; margin-top: 5px;">Если указано, будет использоваться эта цена вместо общей. Можно использовать {price} в URL.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Валюта для этого способа (необязательно):</label>
+                        <select id="paymentMethodCurrency">
+                            <option value="">Использовать общую валюту</option>
+                            <option value="KZT">KZT (Тенге)</option>
+                            <option value="RUB">RUB (Рубль)</option>
+                            <option value="USD">USD (Доллар)</option>
+                            <option value="EUR">EUR (Евро)</option>
+                        </select>
+                        <small style="color: #666; display: block; margin-top: 5px;">Валюта для отображения пользователям</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Цвет кнопки в Telegram:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <label class="color-option">
+                                <input type="radio" name="buttonColor" value="primary" checked>
+                                <span class="color-badge" style="background: #007bff;">Синий (primary)</span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="buttonColor" value="secondary">
+                                <span class="color-badge" style="background: #6c757d;">Серый (secondary)</span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="buttonColor" value="positive">
+                                <span class="color-badge" style="background: #28a745;">Зелёный (positive)</span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="buttonColor" value="negative">
+                                <span class="color-badge" style="background: #dc3545;">Красный (negative)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Порядок отображения:</label>
+                        <input type="number" id="paymentMethodOrder" min="0" value="0" placeholder="0">
+                        <small style="color: #666; display: block; margin-top: 5px;">Меньшее число = выше в списке</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="paymentMethodActive" checked style="margin-right: 8px;">
+                            Активен (видим пользователям)
+                        </label>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button onclick="savePaymentMethod()" class="btn btn-success">
+                            Сохранить
+                        </button>
+                        <button onclick="closePaymentMethodModal()" class="btn btn-secondary">
+                            Отмена
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="users-content" class="content">
+            <h2>Пользователи</h2>
+            <div id="usersData"></div>
+        </div>
+
+        <div id="lessons-content" class="content">
+            <h2>📚 Управление уроками</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                Добавляйте, редактируйте и удаляйте уроки курса.
+            </p>
+
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-success" onclick="openAddLessonModal()">➕ Добавить урок</button>
+            </div>
+
+            <div id="lessonsData"></div>
+
+            <!-- Модальное окно добавления/редактирования урока -->
+            <div id="lessonModal" class="modal">
+                <div class="modal-content" style="max-width: 800px;">
+                    <h3 id="lessonModalTitle">Добавить урок</h3>
+
+                    <input type="hidden" id="lessonId">
+
+                    <div class="form-group">
+                        <label>Номер урока:</label>
+                        <input type="number" id="lessonNumber" min="1" placeholder="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Тип урока:</label>
+                        <select id="lessonType">
+                            <option value="FREE">FREE - Бесплатный урок</option>
+                            <option value="PREMIUM">PREMIUM - Премиум урок</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Название урока (опционально):</label>
+                        <input type="text" id="lessonTitle" placeholder="Введите название урока">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Описание (опционально):</label>
+                        <textarea id="lessonDescription" rows="3" placeholder="Краткое описание урока"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>URL превью видео (опционально):</label>
+                        <input type="url" id="lessonPreviewUrl" placeholder="https://youtube.com/...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>URL полного видео (опционально):</label>
+                        <input type="url" id="lessonFullUrl" placeholder="https://youtube.com/...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Текст практики (опционально):</label>
+                        <textarea id="lessonPractice" rows="4" placeholder="Задание для практики"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Порядок отображения:</label>
+                        <input type="number" id="lessonOrder" min="0" placeholder="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="lessonActive" checked>
+                            Урок активен
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Дополнительные видео:</label>
+                        <div id="lessonVideos" style="margin-top: 10px;">
+                            <!-- Список видео будет добавляться динамически -->
+                        </div>
+                        <button type="button" class="btn" onclick="addLessonVideo()" style="margin-top: 10px;">
+                            ➕ Добавить видео
+                        </button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="btn btn-success" onclick="saveLesson()">💾 Сохранить</button>
+                        <button type="button" class="btn" onclick="closeLessonModal()">❌ Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="drawings-content" class="content">
+            <h2>Рисунки для проверки</h2>
+            <div id="drawingsData"></div>
+        </div>
+
+        <div id="payments-content" class="content">
+            <h2>Заявки на оплату</h2>
+            <div id="paymentRequestsData"></div>
+
+            <h2 style="margin-top: 30px;">Ожидающие подтверждения</h2>
+            <div id="pendingPaymentsData"></div>
+
+            <h2 style="margin-top: 30px;">Активные подписки</h2>
+            <div id="paymentsData"></div>
+        </div>
+
+        <div id="test-content" class="content">
+            <h2>🧪 Тестирование платежей</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                Симулируйте успешную оплату без реальных транзакций.
+                Выберите pending подписку и нажмите кнопку тестирования.
+            </p>
+
+            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                <strong>⚠️ Внимание:</strong> Эти endpoint'ы предназначены только для разработки и тестирования.
+                В production они должны быть отключены.
+            </div>
+
+            <h3>Pending подписки для тестирования</h3>
+            <div id="testPendingPayments"></div>
+
+            <h3 style="margin-top: 30px;">Прямое тестирование</h3>
+            <div style="background: white; padding: 20px; border-radius: 8px;">
+                <div class="form-group">
+                    <label>Subscription ID:</label>
+                    <input type="text" id="testSubscriptionId" placeholder="Введите ID подписки" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div class="form-group">
+                    <label>Платежная система:</label>
+                    <select id="testPaymentProvider" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="yukassa">ЮKassa</option>
+                        <option value="prodamus">Prodamus</option>
+                        <option value="kaspi">Kaspi</option>
+                    </select>
+                </div>
+                <button class="btn btn-success" onclick="triggerTestWebhook()">✅ Симулировать успешную оплату</button>
+            </div>
+
+            <h3 style="margin-top: 30px;">Результат</h3>
+            <div id="testResult" style="background: white; padding: 20px; border-radius: 8px; min-height: 100px;">
+                <p style="color: #999;">Результат тестирования появится здесь...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для комментирования -->
+    <div id="commentModal" class="modal">
+        <div class="modal-content">
+            <h3>Добавить комментарий</h3>
+            <div id="modalError"></div>
+            <div class="form-group">
+                <label>Комментарий:</label>
+                <textarea id="commentText"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Ваше имя:</label>
+                <input type="text" id="commentBy" value="Admin">
+            </div>
+            <button class="btn btn-success" onclick="submitComment()">Отправить</button>
+            <button class="btn" onclick="closeModal()">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно для добавления подписки -->
+    <div id="addSubscriptionModal" class="modal">
+        <div class="modal-content">
+            <h3>Добавить подписку</h3>
+            <div id="subscriptionModalError"></div>
+            <div id="subscriptionModalSuccess"></div>
+            <div class="form-group">
+                <label>Пользователь:</label>
+                <input type="text" id="subscriptionUserName" disabled>
+                <input type="hidden" id="subscriptionUserId">
+            </div>
+            <div class="form-group">
+                <label>Длительность (дней):</label>
+                <input type="number" id="subscriptionDuration" value="30" min="1" max="365">
+            </div>
+            <button class="btn btn-success" onclick="addSubscription()">Добавить</button>
+            <button class="btn" onclick="closeSubscriptionModal()">Отмена</button>
+        </div>
+    </div>
+
+    <script>
+        // Автоматически определяем API_URL на основе текущего хоста
+        const API_URL = window.location.origin + '/api';
+        let authToken = '';
+        let currentDrawingId = '';
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span style="font-size: 20px;">${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            // Автоматически убираем через 3 секунды
+            setTimeout(() => {
+                toast.classList.add('hiding');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300); // Время анимации
+            }, 3000);
+        }
+
+        function authenticate() {
+            authToken = document.getElementById('apiKey').value;
+            if (authToken) {
+                localStorage.setItem('adminToken', authToken);
+                document.getElementById('connectionStatus').className = 'status connected';
+                document.getElementById('connectionStatus').textContent = 'Подключено';
+                loadStats();
+            }
+        }
+
+        // Загрузка токена из localStorage
+        window.onload = function() {
+            const savedToken = localStorage.getItem('adminToken');
+            if (savedToken) {
+                document.getElementById('apiKey').value = savedToken;
+                authenticate();
+            }
+        };
+
+        async function apiRequest(endpoint, options = {}) {
+            const headers = {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            const config = {
+                ...options,
+                headers
+            };
+
+            const response = await fetch(`${API_URL}${endpoint}`, config);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API request failed: ${response.status} - ${errorText}`);
+            }
+
+            return response.json();
+        }
+
+        async function loadStats() {
+            try {
+                const data = await apiRequest('/stats');
+                const html = `
+                    <div class="stat-card">
+                        <h3>Всего пользователей</h3>
+                        <div class="value">${data.users.total}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Активные подписки</h3>
+                        <div class="value">${data.users.active}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Новых за неделю</h3>
+                        <div class="value">${data.users.newUsers}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Всего подписок</h3>
+                        <div class="value">${data.payments.totalSubscriptions}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Общий доход</h3>
+                        <div class="value">${data.payments.totalRevenue.toLocaleString()} ₸</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Доход за месяц</h3>
+                        <div class="value">${data.payments.monthlyRevenue.toLocaleString()} ₸</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Всего рисунков</h3>
+                        <div class="value">${data.drawings.total}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Ожидают проверки</h3>
+                        <div class="value">${data.drawings.pending}</div>
+                    </div>
+                `;
+                document.getElementById('statsData').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const users = await apiRequest('/users');
+                let html = '<table><tr><th>Telegram ID</th><th>Имя</th><th>Статус</th><th>Дата регистрации</th><th>Действия</th></tr>';
+                users.forEach(user => {
+                    const hasActiveSubscription = user.subscriptions && user.subscriptions.length > 0;
+                    html += `<tr>
+                        <td>${user.telegramId}</td>
+                        <td>${user.firstName || ''} ${user.lastName || ''}</td>
+                        <td>${user.status}</td>
+                        <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn btn-success" onclick="openAddSubscriptionModal('${user.id}', '${user.firstName || ''} ${user.lastName || ''}')">
+                                ${hasActiveSubscription ? 'Продлить' : 'Добавить'} подписку
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+                document.getElementById('usersData').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        async function loadLessons() {
+            try {
+                const lessons = await apiRequest('/lessons');
+
+                if (!lessons || lessons.length === 0) {
+                    document.getElementById('lessonsData').innerHTML = '<p style="color: #999;">Нет уроков. Добавьте первый урок.</p>';
+                    return;
+                }
+
+                let html = '<table>';
+                html += '<tr><th>№</th><th>Название</th><th>Тип</th><th>Описание</th><th>Активен</th><th>Действия</th></tr>';
+
+                // Сортируем по order, потом по lessonNumber
+                lessons.sort((a, b) => a.order - b.order || a.lessonNumber - b.lessonNumber);
+
+                lessons.forEach(lesson => {
+                    const typeBadge = getTypeBadge(lesson.type);
+                    const desc = lesson.description || '-';
+                    const shortDesc = desc.length > 50 ? desc.substring(0, 50) + '...' : desc;
+                    const safeLessonData = encodeURIComponent(JSON.stringify(lesson));
+                    const safeTitle = (lesson.title || '').replace(/'/g, '&apos;');
+
+                    html += `<tr>
+                        <td><strong>${lesson.lessonNumber}</strong></td>
+                        <td>${lesson.title}</td>
+                        <td>${typeBadge}</td>
+                        <td style="max-width: 200px;">${shortDesc}</td>
+                        <td>${lesson.isActive ? '✅' : '❌'}</td>
+                        <td style="white-space: nowrap;">
+                            <button class="btn btn-primary" onclick="editLessonSafe('${safeLessonData}')">✏️ Редактировать</button>
+                            <button class="btn btn-danger" onclick="deleteLessonSafe('${lesson.id}', '${safeTitle}')">🗑️ Удалить</button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+                document.getElementById('lessonsData').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+                document.getElementById('lessonsData').innerHTML = '<p style="color: red;">Ошибка загрузки уроков</p>';
+            }
+        }
+
+        function getTypeBadge(type) {
+            const badges = {
+                'FREE': '<span style="background: #4CAF50; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">FREE</span>',
+                'PREMIUM': '<span style="background: #FF9800; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">PREMIUM</span>',
+            };
+            return badges[type] || type;
+        }
+
+        function openAddLessonModal() {
+            document.getElementById('lessonModalTitle').textContent = 'Добавить урок';
+            document.getElementById('lessonId').value = '';
+            document.getElementById('lessonNumber').value = '';
+            document.getElementById('lessonType').value = 'PREMIUM';
+            document.getElementById('lessonTitle').value = '';
+            document.getElementById('lessonDescription').value = '';
+            document.getElementById('lessonPreviewUrl').value = '';
+            document.getElementById('lessonFullUrl').value = '';
+            document.getElementById('lessonPractice').value = '';
+            document.getElementById('lessonOrder').value = '0';
+            document.getElementById('lessonActive').checked = true;
+
+            // Очищаем список видео
+            lessonVideos = [];
+            videoIdCounter = 0;
+            renderLessonVideos();
+
+            document.getElementById('lessonModal').style.display = 'block';
+        }
+
+        function editLessonSafe(encodedLessonData) {
+            try {
+                const lesson = JSON.parse(decodeURIComponent(encodedLessonData));
+                editLesson(lesson);
+            } catch (error) {
+                console.error('Error parsing lesson data:', error);
+                alert('Ошибка при открытии урока для редактирования');
+            }
+        }
+
+        function editLesson(lesson) {
+            document.getElementById('lessonModalTitle').textContent = 'Редактировать урок';
+            document.getElementById('lessonId').value = lesson.id;
+            document.getElementById('lessonNumber').value = lesson.lessonNumber;
+            document.getElementById('lessonType').value = lesson.type;
+            document.getElementById('lessonTitle').value = lesson.title;
+            document.getElementById('lessonDescription').value = lesson.description || '';
+            document.getElementById('lessonPreviewUrl').value = lesson.previewVideoUrl || '';
+            document.getElementById('lessonFullUrl').value = lesson.fullVideoUrl || '';
+            document.getElementById('lessonPractice').value = lesson.practiceText || '';
+            document.getElementById('lessonOrder').value = lesson.order;
+            document.getElementById('lessonActive').checked = lesson.isActive;
+
+            // Загружаем существующие видео
+            lessonVideos = [];
+            videoIdCounter = 0;
+            if (lesson.videos && lesson.videos.length > 0) {
+                lesson.videos.forEach((video, index) => {
+                    const videoId = `video_${videoIdCounter++}`;
+                    lessonVideos.push({
+                        id: videoId,
+                        title: video.title,
+                        videoUrl: video.videoUrl,
+                        order: video.order || (index + 1)
+                    });
+                });
+            }
+            renderLessonVideos();
+
+            document.getElementById('lessonModal').style.display = 'block';
+        }
+
+        function deleteLessonSafe(lessonId, safeTitle) {
+            const title = safeTitle.replace(/&apos;/g, "'");
+            deleteLesson(lessonId, title);
+        }
+
+        // Массив для хранения видео урока
+        let lessonVideos = [];
+        let videoIdCounter = 0;
+
+        function addLessonVideo() {
+            const videoId = `video_${videoIdCounter++}`;
+            lessonVideos.push({
+                id: videoId,
+                title: '',
+                videoUrl: '',
+                order: lessonVideos.length + 1
+            });
+            renderLessonVideos();
+        }
+
+        function removeLessonVideo(videoId) {
+            lessonVideos = lessonVideos.filter(v => v.id !== videoId);
+            // Обновляем порядок
+            lessonVideos.forEach((v, index) => v.order = index + 1);
+            renderLessonVideos();
+        }
+
+        // Делаем функцию доступной глобально для onclick
+        window.removeLessonVideo = removeLessonVideo;
+
+        function renderLessonVideos() {
+            const container = document.getElementById('lessonVideos');
+            if (lessonVideos.length === 0) {
+                container.innerHTML = '<p style="color: #666;">Дополнительных видео нет</p>';
+                return;
+            }
+
+            container.innerHTML = lessonVideos.map((video, index) => `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <strong>Видео ${index + 1}</strong>
+                        <button type="button" class="btn btn-danger" onclick="window.removeLessonVideo('${video.id}')">
+                            🗑️ Удалить
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label>Название видео:</label>
+                        <input type="text" class="video-title" data-id="${video.id}" value="${video.title}"
+                            placeholder="Название видео" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div>
+                        <label>URL видео:</label>
+                        <input type="url" class="video-url" data-id="${video.id}" value="${video.videoUrl}"
+                            placeholder="https://youtube.com/..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                </div>
+            `).join('');
+
+            // Добавляем обработчики изменений
+            container.querySelectorAll('.video-title').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const video = lessonVideos.find(v => v.id === e.target.dataset.id);
+                    if (video) video.title = e.target.value.trim();
+                });
+            });
+
+            container.querySelectorAll('.video-url').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const video = lessonVideos.find(v => v.id === e.target.dataset.id);
+                    if (video) video.videoUrl = e.target.value.trim();
+                });
+            });
+        }
+
+        function closeLessonModal() {
+            document.getElementById('lessonModal').style.display = 'none';
+            lessonVideos = [];
+            videoIdCounter = 0;
+        }
+
+        async function saveLesson() {
+            try {
+                const lessonId = document.getElementById('lessonId').value;
+                const lessonNumber = parseInt(document.getElementById('lessonNumber').value);
+                const type = document.getElementById('lessonType').value;
+                const title = document.getElementById('lessonTitle').value.trim();
+                const description = document.getElementById('lessonDescription').value.trim();
+                const previewVideoUrl = document.getElementById('lessonPreviewUrl').value.trim();
+                const fullVideoUrl = document.getElementById('lessonFullUrl').value.trim();
+                const practiceText = document.getElementById('lessonPractice').value.trim();
+                const orderValue = document.getElementById('lessonOrder').value;
+                const order = orderValue ? parseInt(orderValue) : 0;
+                const isActive = document.getElementById('lessonActive').checked;
+
+                if (!lessonNumber || !type) {
+                    showToast('Номер урока и тип обязательны', 'error');
+                    return;
+                }
+
+                if (isNaN(lessonNumber)) {
+                    showToast('Номер урока должен быть числом', 'error');
+                    return;
+                }
+
+                // Подготавливаем массив видео
+                const videos = lessonVideos
+                    .filter(v => v.title && v.videoUrl) // Только заполненные видео
+                    .map(v => ({
+                        title: v.title,
+                        videoUrl: v.videoUrl,
+                        order: v.order
+                    }));
+
+                const lessonData = {
+                    type,
+                    title: title || null,
+                    description: description || null,
+                    previewVideoUrl: previewVideoUrl || null,
+                    fullVideoUrl: fullVideoUrl || null,
+                    practiceText: practiceText || null,
+                    order,
+                    isActive,
+                    videos: videos  // Отправляем массив (может быть пустым)
+                };
+
+                if (lessonId) {
+                    // Обновление существующего урока
+                    console.log('Updating lesson with lessonNumber:', lessonNumber);
+                    await apiRequest(`/lessons/${lessonNumber}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(lessonData)
+                    });
+                    showToast('Урок обновлен!');
+                } else {
+                    // Создание нового урока
+                    lessonData.lessonNumber = lessonNumber;
+                    console.log('Creating new lesson:', JSON.stringify(lessonData, null, 2));
+                    await apiRequest('/lessons', {
+                        method: 'POST',
+                        body: JSON.stringify(lessonData)
+                    });
+                    showToast('Урок создан!');
+                }
+
+                closeLessonModal();
+                loadLessons();
+            } catch (error) {
+                console.error('Error saving lesson:', error);
+                showToast('Ошибка: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteLesson(lessonId, lessonTitle) {
+            if (!confirm(`Удалить урок "${lessonTitle}"?\n\nЭто также удалит все связанные видео и рисунки студентов!`)) {
+                return;
+            }
+
+            try {
+                await apiRequest(`/lessons/${lessonId}`, {
+                    method: 'DELETE'
+                });
+
+                alert('✅ Урок удален');
+                loadLessons();
+            } catch (error) {
+                console.error('Error deleting lesson:', error);
+                alert('Ошибка удаления урока: ' + error.message);
+            }
+        }
+
+        async function loadDrawings() {
+            try {
+                const drawings = await apiRequest('/drawings/uncommented');
+                let html = '<table><tr><th>Пользователь</th><th>Урок</th><th>Дата</th><th>Действие</th></tr>';
+                drawings.forEach(drawing => {
+                    html += `<tr>
+                        <td>${drawing.user.firstName || ''} (${drawing.user.telegramId})</td>
+                        <td>${drawing.lesson.title}</td>
+                        <td>${new Date(drawing.createdAt).toLocaleDateString()}</td>
+                        <td><button class="btn btn-primary" onclick="openCommentModal('${drawing.id}')">Комментировать</button></td>
+                    </tr>`;
+                });
+                html += '</table>';
+                document.getElementById('drawingsData').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading drawings:', error);
+            }
+        }
+
+        function openCommentModal(drawingId) {
+            currentDrawingId = drawingId;
+            document.getElementById('commentModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('commentModal').classList.remove('show');
+            document.getElementById('commentText').value = '';
+        }
+
+        async function submitComment() {
+            const comment = document.getElementById('commentText').value;
+            const commentedBy = document.getElementById('commentBy').value;
+
+            if (!comment) {
+                alert('Введите комментарий');
+                return;
+            }
+
+            try {
+                await fetch(`${API_URL}/drawings/${currentDrawingId}/comment`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ comment, commentedBy })
+                });
+                closeModal();
+                loadDrawings();
+            } catch (error) {
+                console.error('Error submitting comment:', error);
+            }
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-content`).classList.add('active');
+
+            // Загружаем данные для вкладки тестирования
+            if (tab === 'test') {
+                loadTestPendingPayments();
+            }
+
+            switch(tab) {
+                case 'stats': loadStats(); break;
+                case 'welcome': loadWelcomeSettings(); break;
+                case 'payment-settings':
+                    loadPaymentSettings();
+                    loadPaymentMethods();
+                    break;
+                case 'users': loadUsers(); break;
+                case 'lessons': loadLessons(); break;
+                case 'drawings': loadDrawings(); break;
+                case 'payments':
+                    loadPaymentRequests();
+                    loadPendingPayments();
+                    loadActivePayments();
+                    break;
+            }
+        }
+
+        function openAddSubscriptionModal(userId, userName) {
+            document.getElementById('subscriptionUserId').value = userId;
+            document.getElementById('subscriptionUserName').value = userName;
+            document.getElementById('subscriptionDuration').value = 30;
+            document.getElementById('subscriptionModalError').innerHTML = '';
+            document.getElementById('subscriptionModalSuccess').innerHTML = '';
+            document.getElementById('addSubscriptionModal').classList.add('show');
+        }
+
+        function closeSubscriptionModal() {
+            document.getElementById('addSubscriptionModal').classList.remove('show');
+        }
+
+        async function addSubscription() {
+            const userId = document.getElementById('subscriptionUserId').value;
+            const durationDays = parseInt(document.getElementById('subscriptionDuration').value);
+
+            if (!durationDays || durationDays <= 0) {
+                document.getElementById('subscriptionModalError').innerHTML = '<div class="error">Длительность должна быть больше 0</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/users/${userId}/subscription`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ durationDays })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add subscription');
+                }
+
+                document.getElementById('subscriptionModalSuccess').innerHTML = '<div class="success">Подписка успешно добавлена!</div>';
+                setTimeout(() => {
+                    closeSubscriptionModal();
+                    loadUsers();
+                }, 1500);
+            } catch (error) {
+                console.error('Error adding subscription:', error);
+                document.getElementById('subscriptionModalError').innerHTML = '<div class="error">Ошибка при добавлении подписки</div>';
+            }
+        }
+
+        async function loadPaymentRequests() {
+            try {
+                const requests = await apiRequest('/payment-requests');
+                if (requests.length === 0) {
+                    document.getElementById('paymentRequestsData').innerHTML = '<p style="color: #666; padding: 10px;">Нет заявок на оплату</p>';
+                    return;
+                }
+
+                let html = '<table><tr><th>ID</th><th>Пользователь</th><th>Способ оплаты</th><th>Сумма</th><th>Статус</th><th>Дата создания</th><th>Ссылка</th><th>Действие</th></tr>';
+                requests.forEach(request => {
+                    const userName = request.user ? `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || 'Без имени' : 'Неизвестно';
+                    const statusText = {
+                        'pending': '⏳ Ожидает',
+                        'confirmed': '✅ Подтверждена',
+                        'rejected': '❌ Отклонена',
+                        'cancelled': '🚫 Отменена'
+                    }[request.status] || request.status;
+
+                    const statusColor = {
+                        'pending': '#ffc107',
+                        'confirmed': '#28a745',
+                        'rejected': '#dc3545',
+                        'cancelled': '#6c757d'
+                    }[request.status] || '#666';
+
+                    const notifyButton = request.status === 'pending'
+                        ? `<button class="btn btn-primary" onclick="notifyAdminAboutPayment('${request.id}')" style="font-size: 12px; padding: 5px 10px;">📤 Отправить админу</button>`
+                        : '<span style="color: #999;">—</span>';
+
+                    const deleteButton = `<button class="btn btn-danger" onclick="deletePaymentRequest('${request.id}')" style="font-size: 12px; padding: 5px 10px; margin-left: 5px;">🗑️ Удалить</button>`;
+
+                    html += `<tr>
+                        <td>${request.id.substring(0, 8)}...</td>
+                        <td>${userName}<br><small style="color: #666;">@${request.user?.username || 'N/A'} (${request.user?.telegramId || 'N/A'})</small></td>
+                        <td>${request.paymentMethodName}</td>
+                        <td><strong>${request.price} ${request.currency}</strong></td>
+                        <td style="color: ${statusColor}; font-weight: bold;">${statusText}</td>
+                        <td>${new Date(request.createdAt).toLocaleString('ru-RU', { timeZone: 'Asia/Almaty' })}</td>
+                        <td><a href="${request.paymentUrl}" target="_blank" style="color: #007bff; text-decoration: none;">🔗 Открыть</a></td>
+                        <td>${notifyButton}${deleteButton}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                document.getElementById('paymentRequestsData').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading payment requests:', error);
+                document.getElementById('paymentRequestsData').innerHTML = '<p style="color: #dc3545;">Ошибка загрузки заявок на оплату</p>';
+            }
+        }
+
+        async function notifyAdminAboutPayment(requestId) {
+            if (!confirm('Отправить уведомление администратору в Telegram?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/payment-requests/${requestId}/notify-admin`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to notify admin');
+                }
+
+                const result = await response.json();
+                alert('✅ Уведомление отправлено администратору!');
+                loadPaymentRequests(); // Обновляем список
+            } catch (error) {
+                console.error('Error notifying admin:', error);
+                alert('❌ Ошибка при отправке уведомления: ' + error.message);
+            }
+        }
+
+        async function deletePaymentRequest(requestId) {
+            if (!confirm('Вы уверены, что хотите удалить эту заявку на оплату?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/payment-requests/${requestId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete payment request');
+                }
+
+                alert('✅ Заявка на оплату успешно удалена!');
+                loadPaymentRequests(); // Обновляем список
+            } catch (error) {
+                console.error('Error deleting payment request:', error);
+                alert('❌ Ошибка при удалении заявки: ' + error.message);
+            }
+        }
+
+        async function loadPendingPayments() {
+            try {
+                const payments = await apiRequest('/payments/pending');
+                if (payments.length === 0) {
+                    document.getElementById('pendingPaymentsData').innerHTML = '<p style="color: #666; padding: 10px;">Нет ожидающих платежей</p>';
+                    return;
+                }
+
+                let html = '<table><tr><th>ID</th><th>Пользователь</th><th>Сумма</th><th>Дата создания</th><th>Действие</th></tr>';
+                payments.forEach(payment => {
+                    const userName = payment.user ? `${payment.user.firstName || ''} ${payment.user.lastName || ''}` : 'Неизвестно';
+                    html += `<tr>
+                        <td>${payment.id.substring(0, 8)}...</td>
+                        <td>${userName} (${payment.user?.telegramId || 'N/A'})</td>
+                        <td>${payment.price} ${payment.currency}</td>
+                        <td>${new Date(payment.createdAt).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-success" onclick="confirmPayment('${payment.id}')">✅ Подтвердить</button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+                document.getElementById('pendingPaymentsData').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading pending payments:', error);
+                document.getElementById('pendingPaymentsData').innerHTML = '<p style="color: #dc3545;">Ошибка загрузки ожидающих платежей</p>';
+            }
+        }
+
+        async function loadActivePayments() {
+            try {
+                const payments = await apiRequest('/payments/active');
+                if (payments.length === 0) {
+                    document.getElementById('paymentsData').innerHTML = '<p style="color: #666; padding: 10px;">Нет активных подписок</p>';
+                    return;
+                }
+
+                let html = '<table><tr><th>Пользователь</th><th>Дата начала</th><th>Дата окончания</th><th>Осталось дней</th><th>Действие</th></tr>';
+                payments.forEach(payment => {
+                    const userName = payment.user ? `${payment.user.firstName || ''} ${payment.user.lastName || ''}` : 'Неизвестно';
+                    const daysLeft = Math.ceil((new Date(payment.endDate) - new Date()) / (1000 * 60 * 60 * 24));
+                    html += `<tr>
+                        <td>${userName} (${payment.user?.telegramId || 'N/A'})</td>
+                        <td>${new Date(payment.startDate).toLocaleDateString()}</td>
+                        <td>${new Date(payment.endDate).toLocaleDateString()}</td>
+                        <td>${daysLeft > 0 ? daysLeft : 0} дней</td>
+                        <td><button class="btn btn-danger" onclick="deleteSubscription('${payment.id}')" style="font-size: 12px; padding: 5px 10px;">🗑️ Удалить</button></td>
+                    </tr>`;
+                });
+                html += '</table>';
+                document.getElementById('paymentsData').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading active payments:', error);
+                document.getElementById('paymentsData').innerHTML = '<p style="color: #dc3545;">Ошибка загрузки активных подписок</p>';
+            }
+        }
+
+        async function deleteSubscription(subscriptionId) {
+            if (!confirm('Вы уверены, что хотите удалить эту подписку?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/subscriptions/${subscriptionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete subscription');
+                }
+
+                alert('✅ Подписка успешно удалена!');
+                loadActivePayments(); // Обновляем список
+            } catch (error) {
+                console.error('Error deleting subscription:', error);
+                alert('❌ Ошибка при удалении подписки: ' + error.message);
+            }
+        }
+
+        async function confirmPayment(subscriptionId) {
+            if (!confirm('Вы уверены, что хотите подтвердить этот платеж?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/payments/${subscriptionId}/confirm`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        paymentId: `ADMIN-${Date.now()}`
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to confirm payment');
+                }
+
+                const result = await response.json();
+                alert('✅ Платеж успешно подтвержден! Пользователь получит уведомление.');
+
+                // Перезагружаем списки платежей
+                loadPendingPayments();
+                loadActivePayments();
+                loadStats(); // Обновляем статистику
+            } catch (error) {
+                console.error('Error confirming payment:', error);
+                alert('❌ Ошибка при подтверждении платежа');
+            }
+        }
+
+        // ========================================
+        // ФУНКЦИИ ДЛЯ ТЕСТИРОВАНИЯ ПЛАТЕЖЕЙ
+        // ========================================
+
+        async function loadTestPendingPayments() {
+            try {
+                const payments = await apiRequest('/payments/pending');
+                const container = document.getElementById('testPendingPayments');
+
+                if (!payments || payments.length === 0) {
+                    container.innerHTML = '<p style="color: #999;">Нет pending подписок для тестирования. Создайте подписку через бота.</p>';
+                    return;
+                }
+
+                let html = '<table><tr><th>ID</th><th>Пользователь</th><th>Провайдер</th><th>Сумма</th><th>Дата</th><th>Действия</th></tr>';
+                payments.forEach(payment => {
+                    const userName = payment.user?.firstName || payment.user?.username || 'Неизвестно';
+                    const providerBadge = getProviderBadge(payment.paymentProvider);
+
+                    html += `<tr>
+                        <td title="${payment.id}">${payment.id.substring(0, 8)}...</td>
+                        <td>${userName} (${payment.user?.telegramId})</td>
+                        <td>${providerBadge}</td>
+                        <td>${payment.price} ${payment.currency}</td>
+                        <td>${new Date(payment.createdAt).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="testPayment('${payment.id}', '${payment.paymentProvider}')">
+                                🧪 Тест ${payment.paymentProvider}
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading test pending payments:', error);
+                document.getElementById('testPendingPayments').innerHTML = '<p style="color: red;">Ошибка загрузки данных</p>';
+            }
+        }
+
+        function getProviderBadge(provider) {
+            const badges = {
+                yukassa: '<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 4px;">ЮKassa</span>',
+                prodamus: '<span style="background: #2196F3; color: white; padding: 2px 8px; border-radius: 4px;">Prodamus</span>',
+                kaspi: '<span style="background: #FF9800; color: white; padding: 2px 8px; border-radius: 4px;">Kaspi</span>'
+            };
+            return badges[provider] || provider;
+        }
+
+        async function testPayment(subscriptionId, provider) {
+            if (!confirm(`Симулировать успешную оплату через ${provider}?`)) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = '<p style="color: #2196F3;">⏳ Отправка тестового webhook...</p>';
+
+            try {
+                const response = await fetch(`${API_URL}/test/${provider}/success`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ subscriptionId })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                resultDiv.innerHTML = `
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 15px; color: #155724;">
+                        <h4 style="margin-top: 0;">✅ Успешно!</h4>
+                        <p><strong>Сообщение:</strong> ${result.message}</p>
+                        <p><strong>Subscription ID:</strong> ${result.subscription?.id}</p>
+                        <p><strong>Статус:</strong> ${result.subscription?.status}</p>
+                        <p><strong>Payment ID:</strong> ${result.subscription?.paymentId}</p>
+                        <p><strong>Дата начала:</strong> ${new Date(result.subscription?.startDate).toLocaleString()}</p>
+                        <p><strong>Дата окончания:</strong> ${new Date(result.subscription?.endDate).toLocaleString()}</p>
+                        <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #c3e6cb;">
+                            💬 Пользователь должен получить уведомление в Telegram
+                        </p>
+                    </div>
+                `;
+
+                // Перезагружаем списки
+                loadTestPendingPayments();
+                loadPendingPayments();
+                loadActivePayments();
+                loadStats();
+
+                alert('✅ Тестовый webhook отправлен успешно! Проверьте Telegram.');
+            } catch (error) {
+                console.error('Error testing payment:', error);
+                resultDiv.innerHTML = `
+                    <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 15px; color: #721c24;">
+                        <h4 style="margin-top: 0;">❌ Ошибка</h4>
+                        <p>${error.message}</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Проверьте консоль для подробностей</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function triggerTestWebhook() {
+            const subscriptionId = document.getElementById('testSubscriptionId').value.trim();
+            const provider = document.getElementById('testPaymentProvider').value;
+
+            if (!subscriptionId) {
+                alert('Введите Subscription ID');
+                return;
+            }
+
+            await testPayment(subscriptionId, provider);
+        }
+
+        // ============================================
+        // Welcome Settings Functions
+        // ============================================
+
+        let currentWelcomeSettings = null;
+
+        // Функции для управления текстом политики
+        function insertPolicyFormatting(type) {
+            const textarea = document.getElementById('policyTextInput');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+
+            let newText = '';
+            let cursorOffset = 0;
+
+            switch(type) {
+                case 'bold':
+                    if (selectedText) {
+                        newText = `${beforeText}**${selectedText}**${afterText}`;
+                        cursorOffset = start + selectedText.length + 4;
+                    } else {
+                        newText = `${beforeText}**текст**${afterText}`;
+                        cursorOffset = start + 2;
+                    }
+                    break;
+                case 'italic':
+                    if (selectedText) {
+                        newText = `${beforeText}*${selectedText}*${afterText}`;
+                        cursorOffset = start + selectedText.length + 2;
+                    } else {
+                        newText = `${beforeText}*текст*${afterText}`;
+                        cursorOffset = start + 1;
+                    }
+                    break;
+                case 'code':
+                    if (selectedText) {
+                        newText = `${beforeText}\`${selectedText}\`${afterText}`;
+                        cursorOffset = start + selectedText.length + 2;
+                    } else {
+                        newText = `${beforeText}\`код\`${afterText}`;
+                        cursorOffset = start + 1;
+                    }
+                    break;
+            }
+
+            textarea.value = newText;
+            textarea.focus();
+            textarea.setSelectionRange(cursorOffset, cursorOffset);
+            updatePolicyPreview();
+        }
+
+        function insertPolicyLink() {
+            const textarea = document.getElementById('policyTextInput');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+
+            // Запрашиваем URL у пользователя
+            const url = prompt('Введите URL ссылки:', 'https://example.com');
+            if (!url) return;
+
+            let linkText = selectedText || 'текст ссылки';
+            const newText = `${beforeText}[${linkText}](${url})${afterText}`;
+
+            textarea.value = newText;
+            textarea.focus();
+
+            // Выделяем текст ссылки для редактирования
+            const linkStart = start + 1;
+            const linkEnd = linkStart + linkText.length;
+            textarea.setSelectionRange(linkStart, linkEnd);
+            updatePolicyPreview();
+        }
+
+        function insertPolicyNewline() {
+            const textarea = document.getElementById('policyTextInput');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+
+            const newText = `${beforeText}\n${afterText}`;
+            textarea.value = newText;
+            textarea.focus();
+            textarea.setSelectionRange(start + 1, start + 1);
+            updatePolicyPreview();
+        }
+
+        function clearPolicyText() {
+            if (confirm('Вы уверены, что хотите очистить весь текст?')) {
+                document.getElementById('policyTextInput').value = '';
+                updatePolicyPreview();
+            }
+        }
+
+        // Update preview
+        function updatePolicyPreview() {
+            const text = document.getElementById('policyTextInput').value.trim();
+            const previewDiv = document.getElementById('policyPreview');
+
+            if (!text) {
+                previewDiv.innerHTML = '<p style="color: #999; font-style: italic;">Превью пусто. Введите текст выше.</p>';
+                return;
+            }
+
+            let html = text;
+
+            // Convert Markdown formatting to HTML
+            // Bold: **text** -> <strong>text</strong>
+            html = html.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+
+            // Italic: *text* -> <em>text</em> (but not ** from bold)
+            html = html.replace(/(?<!\*)\*(?!\*)([^\*]+)\*(?!\*)/g, '<em>$1</em>');
+
+            // Code: `text` -> <code>text</code>
+            html = html.replace(/`([^`]+)`/g, '<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">$1</code>');
+
+            // Links: [text](url) -> <a href="url">text</a>
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #007bff; text-decoration: underline;">$1</a>');
+
+            // Convert newlines to <br>
+            html = html.replace(/\n/g, '<br>');
+
+            previewDiv.innerHTML = html;
+        }
+
+        async function loadWelcomeSettings() {
+            try {
+                const settings = await apiRequest('/settings/welcome');
+                currentWelcomeSettings = settings;
+
+                // Заполняем форму
+                document.getElementById('policyTextInput').value = settings.policyText || '';
+                document.getElementById('policyButtonInput').value = settings.policyButton || 'Я согласен';
+                document.getElementById('welcomeTextInput').value = settings.welcomeText || '';
+                document.getElementById('welcomeButtonNewbieInput').value = settings.welcomeButtonNewbie || 'Новичок';
+                document.getElementById('welcomeButtonExperiencedInput').value = settings.welcomeButtonExperienced || 'Уже знаком';
+                document.getElementById('newbieCtaTextInput').value = settings.newbieCtaText || '👆 Посмотрели бесплатные уроки?\n\nГотовы присоединиться к полному курсу?';
+                document.getElementById('newbieCtaButtonInput').value = settings.newbieCtaButton || '🚀 Хочу в проект';
+
+                // Обновляем превью политики
+                updatePolicyPreview();
+
+                // Добавляем event listener для обновления превью в реальном времени
+                const policyTextInput = document.getElementById('policyTextInput');
+                if (policyTextInput) {
+                    policyTextInput.removeEventListener('input', updatePolicyPreview);
+                    policyTextInput.addEventListener('input', updatePolicyPreview);
+                }
+
+                // Обновляем превью
+                updateWelcomePreview(settings);
+            } catch (error) {
+                console.error('Error loading welcome settings:', error);
+                showToast('Ошибка загрузки настроек приветствия', 'error');
+            }
+        }
+
+        function updateWelcomePreview(settings) {
+            // Фото
+            const photoContainer = document.getElementById('welcomePreviewPhoto');
+            if (settings.welcomePhoto) {
+                photoContainer.innerHTML = `<img src="${settings.welcomePhoto}" alt="Welcome" style="max-width: 100%; max-height: 300px; border-radius: 8px;">`;
+            } else {
+                photoContainer.innerHTML = '<p style="color: #999;">📷 Фото не загружено</p>';
+            }
+
+            // Текст
+            const textContainer = document.getElementById('welcomePreviewText');
+            if (settings.welcomeText) {
+                // Простое преобразование Markdown в HTML для превью
+                let html = settings.welcomeText
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                    .replace(/`(.+?)`/g, '<code>$1</code>')
+                    .replace(/\n/g, '<br>');
+                textContainer.innerHTML = html;
+            } else {
+                textContainer.innerHTML = '<p style="color: #999;">Текст не заполнен</p>';
+            }
+
+            // Кнопки
+            const buttonsContainer = document.getElementById('welcomePreviewButtons');
+            buttonsContainer.innerHTML = `
+                <button style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: default;">
+                    ${settings.welcomeButtonNewbie || 'Новичок'}
+                </button>
+                <button style="padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: default;">
+                    ${settings.welcomeButtonExperienced || 'Уже знаком'}
+                </button>
+            `;
+        }
+
+        async function saveWelcomeSettings() {
+            try {
+                const policyText = document.getElementById('policyTextInput').value.trim();
+                const policyButton = document.getElementById('policyButtonInput').value.trim();
+                const welcomeText = document.getElementById('welcomeTextInput').value.trim();
+                const welcomeButtonNewbie = document.getElementById('welcomeButtonNewbieInput').value.trim();
+                const welcomeButtonExperienced = document.getElementById('welcomeButtonExperiencedInput').value.trim();
+                const newbieCtaText = document.getElementById('newbieCtaTextInput').value.trim();
+                const newbieCtaButton = document.getElementById('newbieCtaButtonInput').value.trim();
+
+                if (!welcomeText) {
+                    showToast('Текст приветствия не может быть пустым', 'error');
+                    return;
+                }
+
+                if (!welcomeButtonNewbie || !welcomeButtonExperienced) {
+                    showToast('Тексты кнопок не могут быть пустыми', 'error');
+                    return;
+                }
+
+                if (!newbieCtaText || !newbieCtaButton) {
+                    showToast('Текст и кнопка призыва к действию не могут быть пустыми', 'error');
+                    return;
+                }
+
+                const settings = await apiRequest('/settings/welcome', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        policyText: policyText || null,
+                        policyButton,
+                        welcomeText,
+                        welcomeButtonNewbie,
+                        welcomeButtonExperienced,
+                        newbieCtaText,
+                        newbieCtaButton,
+                    })
+                });
+
+                currentWelcomeSettings = settings;
+                updateWelcomePreview(settings);
+
+                showToast('Настройки приветствия сохранены!');
+            } catch (error) {
+                console.error('Error saving welcome settings:', error);
+                showToast('Ошибка: ' + error.message, 'error');
+            }
+        }
+
+        async function uploadWelcomePhoto() {
+            const fileInput = document.getElementById('welcomePhotoInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showToast('Выберите файл', 'error');
+                return;
+            }
+
+            // Проверка типа файла
+            if (!file.type.startsWith('image/')) {
+                showToast('Можно загружать только изображения', 'error');
+                return;
+            }
+
+            // Проверка размера (5 МБ)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Размер файла не должен превышать 5 МБ', 'error');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('photo', file);
+
+                const response = await fetch(`${API_URL}/settings/welcome/photo`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                currentWelcomeSettings = result.settings;
+                updateWelcomePreview(result.settings);
+
+                // Очистим input
+                fileInput.value = '';
+
+                showToast('Фото загружено успешно!');
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+                showToast('Ошибка загрузки фото', 'error');
+            }
+        }
+
+        async function removeWelcomePhoto() {
+            if (!currentWelcomeSettings?.welcomePhoto) {
+                showToast('Фото не загружено', 'error');
+                return;
+            }
+
+            if (!confirm('Удалить фото приветствия?')) {
+                return;
+            }
+
+            try {
+                await apiRequest('/settings/welcome/photo', {
+                    method: 'DELETE'
+                });
+
+                currentWelcomeSettings.welcomePhoto = null;
+                updateWelcomePreview(currentWelcomeSettings);
+
+                showToast('Фото удалено');
+            } catch (error) {
+                console.error('Error removing photo:', error);
+                showToast('Ошибка удаления фото', 'error');
+            }
+        }
+
+        // ===== PAYMENT SETTINGS FUNCTIONS =====
+
+        let currentPaymentSettings = null;
+        let currentPaymentMethods = [];
+
+        function insertPaymentFormatting(type) {
+            const textarea = document.getElementById('paymentTextInput');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+
+            let newText;
+            let cursorOffset = 0;
+
+            switch(type) {
+                case 'bold':
+                    newText = `${beforeText}**${selectedText || 'текст'}**${afterText}`;
+                    cursorOffset = selectedText ? 2 : 4;
+                    break;
+                case 'italic':
+                    newText = `${beforeText}*${selectedText || 'текст'}*${afterText}`;
+                    cursorOffset = selectedText ? 1 : 3;
+                    break;
+                case 'code':
+                    newText = `${beforeText}\`${selectedText || 'код'}\`${afterText}`;
+                    cursorOffset = selectedText ? 1 : 3;
+                    break;
+            }
+
+            textarea.value = newText;
+            const newCursorPos = start + (selectedText ? end - start + cursorOffset : cursorOffset);
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+            updatePaymentPreview();
+        }
+
+        function insertPaymentLink() {
+            const textarea = document.getElementById('paymentTextInput');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+
+            const url = prompt('Введите URL ссылки:', 'https://example.com');
+            if (!url) return;
+
+            const linkText = selectedText || 'текст ссылки';
+            const newText = `${beforeText}[${linkText}](${url})${afterText}`;
+
+            textarea.value = newText;
+            textarea.focus();
+            updatePaymentPreview();
+        }
+
+        function insertPaymentNewline() {
+            const textarea = document.getElementById('paymentTextInput');
+            const start = textarea.selectionStart;
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(start);
+
+            textarea.value = `${beforeText}\n${afterText}`;
+            const newPos = start + 1;
+            textarea.setSelectionRange(newPos, newPos);
+            textarea.focus();
+            updatePaymentPreview();
+        }
+
+        // Универсальная функция вставки текста в позицию курсора
+        function insertAtCursor(textareaId, textToInsert) {
+            const textarea = document.getElementById(textareaId);
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+
+            textarea.value = `${beforeText}${textToInsert}${afterText}`;
+            const newPos = start + textToInsert.length;
+            textarea.setSelectionRange(newPos, newPos);
+            textarea.focus();
+
+            // Обновляем превью если это поле для оплаты
+            if (textareaId === 'paymentTextInput') {
+                updatePaymentPreview();
+            }
+        }
+
+        function clearPaymentText() {
+            if (confirm('Очистить текст сообщения об оплате?')) {
+                document.getElementById('paymentTextInput').value = '';
+                updatePaymentPreview();
+            }
+        }
+
+        function updatePaymentPreview() {
+            const text = document.getElementById('paymentTextInput').value.trim();
+            const previewDiv = document.getElementById('paymentPreview');
+
+            if (!text) {
+                previewDiv.innerHTML = '<p style="color: #999; font-style: italic;">Превью пусто. Введите текст выше.</p>';
+                return;
+            }
+
+            let html = text;
+
+            // Convert Markdown formatting to HTML
+            // Bold: **text** -> <strong>text</strong>
+            html = html.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+
+            // Italic: *text* -> <em>text</em> (but not ** from bold)
+            html = html.replace(/(?<!\*)\*(?!\*)([^\*]+)\*(?!\*)/g, '<em>$1</em>');
+
+            // Code: `text` -> <code>text</code>
+            html = html.replace(/`([^`]+)`/g, '<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">$1</code>');
+
+            // Links: [text](url) -> <a href="url">text</a>
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #007bff; text-decoration: underline;">$1</a>');
+
+            // Convert newlines to <br>
+            html = html.replace(/\n/g, '<br>');
+
+            previewDiv.innerHTML = html;
+        }
+
+        async function loadPaymentSettings() {
+            try {
+                const settings = await apiRequest('/settings/payment');
+                currentPaymentSettings = settings;
+
+                document.getElementById('paymentTextInput').value = settings.paymentText || '';
+                document.getElementById('paymentPriceInput').value = settings.paymentPrice || '';
+                document.getElementById('paymentCurrencyInput').value = settings.paymentCurrency || 'KZT';
+                document.getElementById('paymentDurationInput').value = settings.paymentDuration || 30;
+                document.getElementById('adminTelegramIdInput').value = settings.adminTelegramId || '';
+
+                updatePaymentPreview();
+            } catch (error) {
+                console.error('Error loading payment settings:', error);
+                showToast('Ошибка загрузки настроек оплаты', 'error');
+            }
+        }
+
+        async function savePaymentSettings() {
+            try {
+                const paymentText = document.getElementById('paymentTextInput').value.trim();
+                const paymentPrice = parseInt(document.getElementById('paymentPriceInput').value) || null;
+                const paymentCurrency = document.getElementById('paymentCurrencyInput').value;
+                const paymentDuration = parseInt(document.getElementById('paymentDurationInput').value) || 30;
+                const adminTelegramId = document.getElementById('adminTelegramIdInput').value.trim();
+
+                const settings = await apiRequest('/settings/payment', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        paymentText: paymentText || null,
+                        paymentPrice,
+                        paymentCurrency,
+                        paymentDuration,
+                        adminTelegramId: adminTelegramId || null,
+                    })
+                });
+
+                currentPaymentSettings = settings;
+                showToast('Настройки оплаты сохранены!');
+            } catch (error) {
+                console.error('Error saving payment settings:', error);
+                showToast('Ошибка: ' + error.message, 'error');
+            }
+        }
+
+        async function loadPaymentMethods() {
+            try {
+                const methods = await apiRequest('/payment-methods');
+                currentPaymentMethods = methods;
+                renderPaymentMethodsTable();
+            } catch (error) {
+                console.error('Error loading payment methods:', error);
+                showToast('Ошибка загрузки способов оплаты', 'error');
+            }
+        }
+
+        function renderPaymentMethodsTable() {
+            const container = document.getElementById('paymentMethodsTable');
+
+            if (!currentPaymentMethods || currentPaymentMethods.length === 0) {
+                container.innerHTML = '<p style="color: #666; padding: 20px; text-align: center;">Нет способов оплаты. Нажмите "Добавить способ оплаты" чтобы создать первый.</p>';
+                return;
+            }
+
+            const colorNames = {
+                'primary': 'Синий',
+                'secondary': 'Серый',
+                'positive': 'Зелёный',
+                'negative': 'Красный'
+            };
+
+            let html = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 12px; text-align: left;">Название</th>
+                            <th style="padding: 12px; text-align: left;">Ссылка на оплату</th>
+                            <th style="padding: 12px; text-align: left;">Текст кнопки</th>
+                            <th style="padding: 12px; text-align: center;">Цвет</th>
+                            <th style="padding: 12px; text-align: center;">Порядок</th>
+                            <th style="padding: 12px; text-align: center;">Активен</th>
+                            <th style="padding: 12px; text-align: center;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            currentPaymentMethods.forEach(method => {
+                const shortUrl = method.paymentUrl.length > 50 ? method.paymentUrl.substring(0, 47) + '...' : method.paymentUrl;
+                const colorName = colorNames[method.buttonColor] || 'Синий';
+                html += `
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px;">${method.name}</td>
+                        <td style="padding: 12px;">
+                            <a href="${method.paymentUrl}" target="_blank" style="color: #007bff; text-decoration: none;">
+                                ${shortUrl}
+                            </a>
+                        </td>
+                        <td style="padding: 12px;">${method.buttonText}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span style="padding: 4px 8px; background: ${method.buttonColor === 'positive' ? '#28a745' : method.buttonColor === 'negative' ? '#dc3545' : method.buttonColor === 'secondary' ? '#6c757d' : '#007bff'}; color: white; border-radius: 4px; font-size: 12px;">
+                                ${colorName}
+                            </span>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">${method.order}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            ${method.isActive ? '✅' : '❌'}
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="editPaymentMethod('${method.id}')"
+                                    style="padding: 6px 12px; background: #ffc107; color: #000; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">
+                                ✏️ Редактировать
+                            </button>
+                            <button onclick="deletePaymentMethod('${method.id}')"
+                                    style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                🗑️ Удалить
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function showAddPaymentMethodModal() {
+            // Очищаем форму
+            document.getElementById('paymentMethodId').value = '';
+            document.getElementById('paymentMethodName').value = '';
+            document.getElementById('paymentMethodUrl').value = '';
+            document.getElementById('paymentMethodButtonText').value = '';
+            document.getElementById('paymentMethodPrice').value = '';
+            document.getElementById('paymentMethodCurrency').value = '';
+            document.getElementById('paymentMethodOrder').value = '0';
+            document.getElementById('paymentMethodActive').checked = true;
+
+            // Сбрасываем радио-кнопки на primary
+            document.querySelector('input[name="buttonColor"][value="primary"]').checked = true;
+
+            // Меняем заголовок
+            document.getElementById('paymentMethodModalTitle').textContent = 'Добавить способ оплаты';
+
+            // Показываем модальное окно
+            document.getElementById('paymentMethodModal').classList.add('show');
+        }
+
+        function closePaymentMethodModal() {
+            document.getElementById('paymentMethodModal').classList.remove('show');
+        }
+
+        async function savePaymentMethod() {
+            const id = document.getElementById('paymentMethodId').value;
+            const name = document.getElementById('paymentMethodName').value.trim();
+            const paymentUrl = document.getElementById('paymentMethodUrl').value.trim();
+            const buttonText = document.getElementById('paymentMethodButtonText').value.trim();
+            const buttonColor = document.querySelector('input[name="buttonColor"]:checked').value;
+            const order = parseInt(document.getElementById('paymentMethodOrder').value) || 0;
+            const isActive = document.getElementById('paymentMethodActive').checked;
+
+            // Валидация
+            if (!name) {
+                showToast('Введите название способа оплаты', 'error');
+                return;
+            }
+            if (!paymentUrl) {
+                showToast('Введите ссылку на страницу оплаты', 'error');
+                return;
+            }
+            if (!buttonText) {
+                showToast('Введите текст кнопки', 'error');
+                return;
+            }
+
+            const price = document.getElementById('paymentMethodPrice').value.trim();
+            const currency = document.getElementById('paymentMethodCurrency').value;
+
+            const data = {
+                name,
+                paymentUrl,
+                buttonText,
+                buttonColor,
+                price: price ? parseInt(price) : null,
+                currency: currency || null,
+                order,
+                isActive
+            };
+
+            try {
+                if (id) {
+                    // Обновление существующего
+                    await apiRequest(`/payment-methods/${id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(data)
+                    });
+                    showToast('Способ оплаты обновлён!');
+                } else {
+                    // Создание нового
+                    await apiRequest('/payment-methods', {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    });
+                    showToast('Способ оплаты добавлен!');
+                }
+
+                closePaymentMethodModal();
+                await loadPaymentMethods();
+            } catch (error) {
+                console.error('Error saving payment method:', error);
+                showToast('Ошибка: ' + error.message, 'error');
+            }
+        }
+
+        function editPaymentMethod(id) {
+            const method = currentPaymentMethods.find(m => m.id === id);
+            if (!method) return;
+
+            // Заполняем форму данными
+            document.getElementById('paymentMethodId').value = method.id;
+            document.getElementById('paymentMethodName').value = method.name;
+            document.getElementById('paymentMethodUrl').value = method.paymentUrl;
+            document.getElementById('paymentMethodButtonText').value = method.buttonText;
+            document.getElementById('paymentMethodPrice').value = method.price || '';
+            document.getElementById('paymentMethodCurrency').value = method.currency || '';
+            document.getElementById('paymentMethodOrder').value = method.order;
+            document.getElementById('paymentMethodActive').checked = method.isActive;
+
+            // Устанавливаем цвет
+            const colorRadio = document.querySelector(`input[name="buttonColor"][value="${method.buttonColor || 'primary'}"]`);
+            if (colorRadio) {
+                colorRadio.checked = true;
+            }
+
+            // Меняем заголовок
+            document.getElementById('paymentMethodModalTitle').textContent = 'Редактировать способ оплаты';
+
+            // Показываем модальное окно
+            document.getElementById('paymentMethodModal').classList.add('show');
+        }
+
+        async function deletePaymentMethod(id) {
+            const method = currentPaymentMethods.find(m => m.id === id);
+            if (!method) return;
+
+            if (!confirm(`Удалить способ оплаты "${method.name}"?`)) {
+                return;
+            }
+
+            try {
+                await apiRequest(`/payment-methods/${id}`, {
+                    method: 'DELETE'
+                });
+
+                showToast('Способ оплаты удалён!');
+                await loadPaymentMethods();
+            } catch (error) {
+                console.error('Error deleting payment method:', error);
+                showToast('Ошибка: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

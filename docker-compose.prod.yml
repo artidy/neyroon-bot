@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: neyroon-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: neyroon_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: neyroon_bot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - neyroon-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neyroon_user -d neyroon_bot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: neyroon-bot
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://neyroon_user:${POSTGRES_PASSWORD:-changeme}@postgres:5432/neyroon_bot?schema=public
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - neyroon-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  neyroon-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

@@ -1,0 +1,77 @@
+version: '3.8'
+
+# Docker Compose для разработки с hot-reload
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: neyroon-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: neyroon_user
+      POSTGRES_PASSWORD: neyroon_dev_password
+      POSTGRES_DB: neyroon_bot
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neyroon_user -d neyroon_bot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: neyroon-bot-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      DATABASE_URL: postgresql://neyroon_user:neyroon_dev_password@postgres:5432/neyroon_bot?schema=public
+      YUKASSA_SHOP_ID: ${YUKASSA_SHOP_ID}
+      YUKASSA_SECRET_KEY: ${YUKASSA_SECRET_KEY}
+      KASPI_MERCHANT_ID: ${KASPI_MERCHANT_ID}
+      KASPI_MERCHANT_SECRET: ${KASPI_MERCHANT_SECRET}
+      SUBSCRIPTION_PRICE: ${SUBSCRIPTION_PRICE:-4000}
+      SUBSCRIPTION_CURRENCY: ${SUBSCRIPTION_CURRENCY:-KZT}
+      SUBSCRIPTION_DURATION_DAYS: ${SUBSCRIPTION_DURATION_DAYS:-30}
+      ADMIN_PORT: 3000
+      ADMIN_SECRET: ${ADMIN_SECRET:-dev_secret_123}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_123}
+      UPLOAD_PATH: /app/uploads
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-10485760}
+      TIMEZONE: ${TIMEZONE:-Asia/Almaty}
+      DEFAULT_LESSON_TIME: ${DEFAULT_LESSON_TIME:-10:00}
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+      - ./uploads:/app/uploads
+      - ./admin-panel:/app/admin-panel
+    ports:
+      - "3000:3000"
+
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.studio
+    container_name: neyroon-prisma-studio-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://neyroon_user:neyroon_dev_password@postgres:5432/neyroon_bot?schema=public
+    ports:
+      - "5555:5555"
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
+networks:
+  default:
+    name: neyroon-dev-network
